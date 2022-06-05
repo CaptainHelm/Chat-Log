@@ -1,24 +1,56 @@
+#SingleInstance force
+#UseHook
 #NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
-; #Warn  ; Enable warnings to assist with detecting common errors.
-SendMode Input  ; Recommended for new scripts due to its superior speed and reliability.
 SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 
-Character1 = Helmet
-Character2 = Slippers
-Character3 = Gloves
-Character4 = Leggings
-Character5 = TBA
-DruidPet = Boots
-WizardPet = Slippers
+SendMode Input  ; Recommended for new scripts due to its superior speed and reliability.
 
-CharacterClient = ahk_pid 74008 ;%CharacterClient%
-CharacterClient2 = ahk_pid 77448
+
+amount_of_Commands := 9 ;amount of commands usable
+GroupSize := 6 ;amount of characters in the group in order
+BoxSize := 3 ;amount of multiboxed characters
+
+
+char1 := "You tell your party" ; character that is reading the chatlog from displays messages without their name
+char2 := "namename " ;whitelisted names of players in the group, can be yourself or anyone you want available to send commands as long as they have access to party chat or if configured private chat channel.
+char3 := "steve "
+char4 := "sffen "
+char4 := "coke "
+char5 := "cocainejane "
+char6 := "zxccczz "
+
+chatCommand1 := "command 1" ;chat commands, modifiable phrase to trigger command#
+chatCommand2 := "command 2"
+chatCommand3 := "command 3"
+chatcommand4 := "command 4"
+chatcommand5 := "command 5"
+chatcommand6 := "command 6"
+chatcommand7 := "command 7"
+chatcommand8 := "command 8"
+chatcommand9 := "command 9"
+
+command1 := "1" ;hotkey sent to clients
+command2 := "2"
+command3 := "3"
+command4 := "4"
+command5 := "5"
+command6 := "6"
+command7 := "7"
+command8 := "8"
+command9 := "9"
+
+box1 := "Boots " ;multiboxed character names
+box2 := "Slippers "
+box3 := "stephon "
+
+boxclient1 := "ahk_pid 66628" ;PID of multiboxed characters
+boxclient2 := "ahk_pid 77448"
+boxclient3 := "windownam3"
 
 FilePath := A_ScriptDir "\eqlog_Helmet_yelinak.txt" 
 File := FileOpen(FilePath, "r")
 OldLogFileSize := 0
-File.Seek(0, 2) 
-
+File.Seek(0, 2)
 Loop
 {
 	LogFileSize := File.Length
@@ -28,825 +60,82 @@ Loop
 		{
 			if File.AtEOF
 				Break
-			TextLine := File.Readline()
-;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Start DRUID ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~				
-;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ General Commands ~~~~~~~~~~~~~~~~~~~~~~~~~~	
-			IfInString, TextLine, sit %DruidPet%
-			{
-				gosub SitDruidPetFilter	
-			}	
-			
-			IfInString, TextLine, follow me %DruidPet%
-			{
-				gosub FollowMeDruidPetFilter	
-			}
-			
-			IfInString, TextLine, stay here %DruidPet%
-			{
-				gosub StayHereDruidPetFilter	
-			}
-;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~				
-;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Healing ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-			IfInString, TextLine, heal me
-			{
-				gosub HealMeFilter	
-			}
-			
-			IfInString, TextLine, cheal
-			{
-				gosub HealOtherFilter	
-			}	
-			
-			IfInString, TextLine, heal my target
-			{
-				gosub HealMyTargetFilter	
-			}
-;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~			
-;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Buffs ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-			
-			IfInString, TextLine, sow me
-			{
-				gosub SowMeFilter	
-			}		
-			
-			IfInString, TextLine, csow
-			{
-				gosub, SowOtherFilter
-			}
-			
-			IfInString, TextLine, sow my target
-			{
-				gosub SowMyTargetFilter	
-			}
-;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~			
-;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Offense ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-			
-			IfInString, TextLine, %DruidPet% nuke my target
-			{
-				gosub DruidPetNukeMyTargetFilter
-			}		
-			
-			IfInString, TextLine, dot my target
-			{
-				gosub DotMyTargetFilter
-			}				
-			
-			IfInString, TextLine, snare my target
-			{
-				gosub SnareMyTargetFilter
-			}				
-;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~				
-			
-;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Wizard Start ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-			
-			IfInString, TextLine, %WizardPet% nuke my target
-			{
-				gosub WizardPetNukeMyTargetFilter
-			}				
-			
-			IfInString, TextLine, sit %WizardPet%
-			{
-				gosub SitWizardPetFilter	
-			}	
-			
-			IfInString, TextLine, follow me %WizardPet%
-			{
-				gosub FollowMeWizardPetFilter	
-			}
-			
-			IfInString, TextLine, stay here %WizardPet%
-			{
-				gosub StayHereWizardPetFilter	
-			}
-			
-			
-			
-			
-			
-			
-			
-			
-			
+			chat_message := File.Readline()
+			Chat_Commands(Chat_Message, Message_From_Char, Groupsize, char%a_index%, box%a_index%, Boxsize, Character_Commanded, chatCommand%a_index%, Command_Received, amount_of_Commands, command%a_index%)
 		}
 		OldLogFileSize := LogFileSize
 	}
 	Sleep, 1
 }
-;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Commands ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-DruidPetHeal:
+
+Chat_Commands(Chat_Message, Message_From_Char, Groupsize, char#, box#, boxsize, Character_Commanded, chatCommand#, Command_received, amount_of_Commands, command#)
 {
-	controlsend,,{altdown}1, %CharacterClient%
-	sleep 1
-	controlsend,,{altup}, %CharacterClient%
-	sleep 5
-	return
+	Whitelist(Chat_Message, Message_From_Char, Groupsize, char#, box#, boxsize, Character_Commanded, chatCommand#, Command_received, amount_of_Commands, command#)
 }
 
-Character1Heal:
+whitelist(Chat_Message, Message_From_Char, Groupsize, char#, box#, boxsize, Character_Commanded, chatCommand#, Command_Received, amount_of_Commands, command#)
 {
-	controlsend,,{altdown}2, %CharacterClient% ;%CharacterClient%
-	sleep 1
-	controlsend,,{altup}, %CharacterClient% ;%CharacterClient%
-	sleep 5
-	return
+	loop %GroupSize%
+	{
+		if instr(Chat_message, char%a_index%)
+		{				
+			Message_From_Char := char%a_index%
+			Box_Commanded_Filter(Chat_Message, box#, Character_Commanded, boxsize, chatCommand#, Command_Received, amount_of_Commands, command#)
+			break
+		}
+	}
 }
 
-Character2Heal:
+Box_Commanded_Filter(chat_message, box#, Character_Commanded, boxsize, chatCommand#, Command_Received, amount_of_Commands, command#)
 {
-	controlsend,,{altdown}3, %CharacterClient% ;%CharacterClient%
-	sleep 1
-	controlsend,,{altup}, %CharacterClient% ;%CharacterClient%
-	sleep 5
-	return
+	loop %boxsize%
+	{
+		if instr(chat_message, box%a_index%)
+		{
+			Character_Commanded := box%a_index%
+			Command_Filter(chat_message, chatCommand#, command_received, amount_of_Commands, Character_Commanded, command#)
+			break
+		}
+	}
 }
 
-Character3Heal:
+Command_Filter(chat_message, chatCommand#, command_received, amount_of_Commands, Character_Commanded, command#)
 {
-	controlsend,,{altdown}4, %CharacterClient%
-	sleep 1
-	controlsend,,{altup}, %CharacterClient%
-	sleep 5
-	return
+	loop %amount_of_Commands%
+	{
+		if instr(chat_message, chatCommand%a_index%)
+		{
+			Command_Received := chatCommand%a_index%
+			Character_Commanded_Filtered(command_received, Character_Commanded, chatcommand#, command#, amount_of_Commands)
+			break
+		}
+	}
 }
 
-Character4Heal:
+Character_Commanded_Filtered(command_received, Character_Commanded, chatcommand#, command#, amount_of_Commands)
 {
-	controlsend,,{altdown}5, %CharacterClient%
-	sleep 1
-	controlsend,,{altup}, %CharacterClient%
-	sleep 5
-	return
+	loop %amount_of_Commands%
+	{
+		if instr(character_commanded, box%a_index%)
+		{
+			Character_Commanded := boxclient%a_index%
+			Send_Command(command_received, command#, Character_Commanded, amount_of_Commands)
+			break
+		}
+	}
 }
 
-AssistCharacter1Heal:
+Send_Command(command_received, command#, Character_Commanded, amount_of_Commands)
 {
-	controlsend,,{altdown}{ctrldown}2, %CharacterClient%
-	sleep 1
-	controlsend,,{altup}{ctrlup}, %CharacterClient%
-	sleep 500
-	controlsend,,1, %CharacterClient%
-	return
-}
-	
-AssistCharacter2Heal:
-{
-	controlsend,,{altdown}{ctrldown}3, %CharacterClient%
-	sleep 1
-	controlsend,,{altup}{ctrlup}, %CharacterClient%
-	sleep 500
-	controlsend,,1, %CharacterClient%
-	return
-}
-	
-AssistCharacter3Heal:
-{
-	controlsend,,{altdown}{ctrldown}4, %CharacterClient%
-	sleep 1
-	controlsend,,{altup}{ctrlup}, %CharacterClient%
-	sleep 500
-	controlsend,,1, %CharacterClient%
-	return
-}
-	
-AssistCharacter4Heal:
-{
-	controlsend,,{altdown}{ctrldown}5, %CharacterClient%
-	sleep 1
-	controlsend,,{altup}{ctrlup}, %CharacterClient%
-	sleep 500
-	controlsend,,1, %CharacterClient%
-	return
+	loop %amount_of_Commands%
+	{
+		if instr(command_received, chatcommand%a_index%)
+		{	
+			command_received := command%a_index%
+			controlsend,,%command_received%, %character_commanded%
+			return
+		}
+	}	
 }
 
-DruidPetSow:
-{
-	controlsend,,{altdown}{ctrldown}7, %CharacterClient%
-	sleep 1
-	controlsend,,{altup}{ctrlup}, %CharacterClient%
-	sleep 500
-	controlsend,,7, %CharacterClient%
-	return
-}
-
-Character1Sow:
-{
-	controlsend,,{altdown}{ctrldown}8, %CharacterClient%
-	sleep 1
-	controlsend,,{altup}{ctrlup}, %CharacterClient%
-	sleep 500
-	controlsend,,7, %CharacterClient%
-	sleep 500
-	return
-}
-
-Character2Sow:
-{
-	controlsend,,{altdown}{ctrldown}9, %CharacterClient%
-	sleep 1
-	controlsend,,{altup}{ctrlup}, %CharacterClient%
-	sleep 500
-	controlsend,,7, %CharacterClient%
-	return
-}
-
-Character4Sow:
-{
-	controlsend,,{altdown}{ctrldown}0, %CharacterClient%
-	sleep 1
-	controlsend,,{altup}{ctrlup}, %CharacterClient%
-	sleep 500
-	controlsend,,7, %CharacterClient%
-	return	
-}
-
-Character3Sow:
-{
-	controlsend,,{altdown}{ctrldown}{-}, %CharacterClient%
-	sleep 1
-	controlsend,,{altup}{ctrlup}, %CharacterClient%
-	sleep 500
-	controlsend,,7, %CharacterClient%
-	return
-}
-
-AssistCharacter1Sow:
-{
-	controlsend,,{altdown}{ctrldown}2, %CharacterClient%
-	sleep 50
-	controlsend,,{altup}{ctrlup}, %CharacterClient%
-	sleep 700
-	controlsend,,7, %CharacterClient%
-	return
-}
-
-AssistCharacter2Sow:
-{
-	controlsend,,{altdown}{ctrldown}3, %CharacterClient%
-	sleep 1
-	controlsend,,{altup}{ctrlup}, %CharacterClient%
-	sleep 700
-	controlsend,,7, %CharacterClient%
-	return
-}
-
-AssistCharacter3Sow:
-{
-	controlsend,,{altdown}{ctrldown}4, %CharacterClient%
-	sleep 1
-	controlsend,,{altup}{ctrlup}, %CharacterClient%
-	sleep 700
-	controlsend,,7, %CharacterClient%
-	return
-}
-
-AssistCharacter4Sow:
-{
-	controlsend,,{altdown}{ctrldown}5, %CharacterClient%
-	sleep 1
-	controlsend,,{altup}{ctrlup}, %CharacterClient%
-	sleep 500
-	controlsend,,7, %CharacterClient%
-	return
-}
-
-DruidPetAssistCharacter1Nuke:
-{
-	controlsend,,{altdown}{ctrldown}2, %CharacterClient%
-	sleep 1
-	controlsend,,{altup}{ctrlup}, %CharacterClient%
-	sleep 500
-	controlsend,,4, %CharacterClient%
-	return
-}
-
-DruidPetAssistCharacter2Nuke:
-{
-	controlsend,,{altdown}{ctrldown}3, %CharacterClient%
-	sleep 1
-	controlsend,,{altup}{ctrlup}, %CharacterClient%
-	sleep 500
-	controlsend,,4, %CharacterClient%
-	return
-}
-
-DruidPetAssistCharacter3Nuke:
-{
-	controlsend,,{altdown}{ctrldown}4, %CharacterClient%
-	sleep 1
-	controlsend,,{altup}{ctrlup}, %CharacterClient%
-	sleep 500
-	controlsend,,4, %CharacterClient%
-	return
-}
-
-DruidPetAssistCharacter4Nuke:
-{
-	controlsend,,{altdown}{ctrldown}5, %CharacterClient%
-	sleep 1
-	controlsend,,{altup}{ctrlup}, %CharacterClient%
-	sleep 500
-	controlsend,,4, %CharacterClient%
-	return
-}
-
-WizardPetAssistCharacter1Nuke:
-{
-	controlsend,,{altdown}{ctrldown}2, %CharacterClient2%
-	sleep 1
-	controlsend,,{altup}{ctrlup}, %CharacterClient2%
-	sleep 700
-	controlsend,,3, %CharacterClient2%
-	return
-}
-
-WizardPetAssistCharacter2Nuke:
-{
-	controlsend,,{altdown}{ctrldown}3, %CharacterClient2%
-	sleep 1
-	controlsend,,{altup}{ctrlup}, %CharacterClient2%
-	sleep 500
-	controlsend,,4, %CharacterClient2%
-	return
-}
-
-WizardPetAssistCharacter3Nuke:
-{
-	controlsend,,{altdown}{ctrldown}4, %CharacterClient2%
-	sleep 1
-	controlsend,,{altup}{ctrlup}, %CharacterClient2%
-	sleep 500
-	controlsend,,4, %CharacterClient2%
-	return
-}
-
-WizardPetAssistCharacter4Nuke:
-{
-	controlsend,,{altdown}{ctrldown}5, %CharacterClient2%
-	sleep 1
-	controlsend,,{altup}{ctrlup}, %CharacterClient2%
-	sleep 500
-	controlsend,,4, %CharacterClient2%
-	return
-}
-
-AssistCharacter1Dot:
-{
-	controlsend,,{altdown}{ctrldown}2, %CharacterClient%
-	sleep 1
-	controlsend,,{altup}{ctrlup}, %CharacterClient%
-	sleep 500
-	controlsend,,5, %CharacterClient%
-	return
-}
-
-AssistCharacter2Dot:
-{
-	controlsend,,{altdown}{ctrldown}3, %CharacterClient%
-	sleep 1
-	controlsend,,{altup}{ctrlup}, %CharacterClient%
-	sleep 500
-	controlsend,,5, %CharacterClient%
-	return
-}
-
-AssistCharacter3Dot:
-{
-	controlsend,,{altdown}{ctrldown}4, %CharacterClient%
-	sleep 1
-	controlsend,,{altup}{ctrlup}, %CharacterClient%
-	sleep 500
-	controlsend,,5, %CharacterClient%
-	return
-}
-
-AssistCharacter4Dot:
-{
-	controlsend,,{altdown}{ctrldown}5, %CharacterClient%
-	sleep 1
-	controlsend,,{altup}{ctrlup}, %CharacterClient%
-	sleep 500
-	controlsend,,5, %CharacterClient%
-	return
-}
-
-AssistCharacter1Snare:
-{
-	controlsend,,{altdown}{ctrldown}2, %CharacterClient%
-	sleep 1
-	controlsend,,{altup}{ctrlup}, %CharacterClient%
-	sleep 500
-	controlsend,,6, %CharacterClient%
-	return
-}
-
-AssistCharacter2Snare:
-{
-	controlsend,,{altdown}{ctrldown}3, %CharacterClient%
-	sleep 1
-	controlsend,,{altup}{ctrlup}, %CharacterClient%
-	sleep 500
-	controlsend,,6, %CharacterClient%
-	return
-}
-
-AssistCharacter3Snare:
-{
-	controlsend,,{altdown}{ctrldown}4, %CharacterClient%
-	sleep 1
-	controlsend,,{altup}{ctrlup}, %CharacterClient%
-	sleep 500
-	controlsend,,6, %CharacterClient%
-	return
-}
-
-AssistCharacter4Snare:
-{
-	controlsend,,{altdown}{ctrldown}5, %CharacterClient%
-	sleep 1
-	controlsend,,{altup}{ctrlup}, %CharacterClient%
-	sleep 500
-	controlsend,,6, %CharacterClient%
-	return
-}
-
-SitDruidPet:
-{
-	controlsend,,{altdown}{=}, %CharacterClient%
-	sleep 1
-	controlsend,,{altup}, %CharacterClient%
-	return
-}
-
-SitWizardPet:
-{
-	controlsend,,{=}, %CharacterClient2%
-	return
-}
-
-DruidPetFollowCharacter1:
-{
-	controlsend,,{altdown}{ctrldown}8, %CharacterClient%
-	sleep 1
-	controlsend,,{altup}{ctrlup}, %CharacterClient%
-	sleep 500
-	controlsend,,{altdown}{-}, %CharacterClient%
-	sleep 50
-	controlsend,,{altup}, %CharacterClient%
-	return
-}
-
-
-DruidPetFollowCharacter2:
-{
-	controlsend,,{altdown}{ctrldown}9, %CharacterClient%
-	sleep 1
-	controlsend,,{altup}{ctrlup}, %CharacterClient%
-	sleep 500
-	controlsend,,{altdown}{-}, %CharacterClient%
-	sleep 1
-	controlsend,,{altup}, %CharacterClient%
-	return
-}
-
-DruidPetFollowCharacter3:
-{
-	controlsend,,{altdown}{ctrldown}0, %CharacterClient%
-	sleep 1
-	controlsend,,{altup}{ctrlup}, %CharacterClient%
-	sleep 500
-	controlsend,,{altdown}{-}, %CharacterClient%
-	sleep 1
-	controlsend,,{altup}, %CharacterClient%
-	return
-}
-
-DruidPetFollowCharacter4:
-{
-	controlsend,,{altdown}{ctrldown}{-}, %CharacterClient%
-	sleep 1
-	controlsend,,{altup}{ctrlup}, %CharacterClient%
-	sleep 500
-	controlsend,,{altdown}{-}, %CharacterClient%
-	sleep 50
-	controlsend,,{altup}, %CharacterClient%
-	return
-}
-
-StayHereDruidPet:
-{
-	controlsend,,{s down}, %CharacterClient%
-	sleep 500
-	controlsend,,{s up}, %CharacterClient%
-	return
-}
-
-WizardPetFollowCharacter1:
-{
-	controlsend,,{altdown}{ctrldown}{8}, %CharacterClient2%
-	sleep 1
-	controlsend,,{altup}{ctrlup}, %CharacterClient2%
-	sleep 500
-	controlsend,,{-}, %CharacterClient2%
-	sleep 50
-	return
-}
-
-StayHereWizardPet:
-{
-	controlsend,,{s down}, %CharacterClient2%
-	sleep 500
-	controlsend,,{s up}, %CharacterClient2%
-	return
-}
-
-
-;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ FILTERS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-HealMyTargetFilter:
-{
-	IfInString, TextLine, You tell your party, 'heal my target'
-		gosub, AssistCharacter1Heal
-		
-		
-	else IfInString, TextLine, %Character2% tells the group, 'heal my target'
-		gosub, AssistCharacter2Heal
-		
-		
-	else IfInString, TextLine, %Character3% tells the group, 'heal my target'
-		gosub, AssistCharacter3Heal
-		
-		
-	else IfInString, TextLine, %Character4% tells the group, 'heal my target'
-		gosub, AssistCharacter4Heal
-}
-
-HealMeFilter:
-{
-	IfInString, TextLine, You tell your party, 'heal me'
-	gosub, Character1Heal
-	
-	else IfInString, TextLine, %Character2% tells the group, 'heal me'
-		gosub, Character2Heal
-	
-	else IfInString, TextLine, %Character4% tells the group, 'heal me'
-		gosub, Character4Heal
-	
-	else IfInString, TextLine, %Character3% tells the group, 'heal me'
-		gosub, Character3Heal
-}
-	
-HealOtherFilter:
-{
-	IfInString, TextLine, You tell your party, 'cheal %DruidPet%'
-		gosub, DruidPetHeal	
-	else IfInString, TextLine, You tell your party, 'cheal %Character4%'
-		gosub, Character4Heal			
-	else IfInString, TextLine, You tell your party, 'cheal %Character3%'
-		gosub, Character3Heal	
-	else IfInString, TextLine, You tell your party, 'cheal %Character2%'
-		gosub, Character2Heal	
-
-	else IfInString, TextLine, %Character2% tells the group, 'cheal %Character1%'
-		gosub, Character1Heal
-	else IfInString, TextLine, %Character2% tells the group, 'cheal %Character3%'
-		gosub, Character3Heal
-	else IfInString, TextLine, %Character2% tells the group, 'cheal %Character4%'
-		gosub, Character4Heal
-	else IfInString, TextLine, %Character2% tells the group, 'cheal %DruidPet%'
-		gosub, DruidPetHeal
-
-	else IfInString, TextLine, %Character3% tells the group, 'cheal %Character1%'
-		gosub, Character1Heal
-	else IfInString, TextLine, %Character3% tells the group, 'cheal %Character2%'
-		gosub, Character2Heal
-	else IfInString, TextLine, %Character3% tells the group, 'cheal %Character4%'
-		gosub, Character4Heal
-	else IfInString, TextLine, %Character3% tells the group, 'cheal %DruidPet%'
-		gosub, DruidPetHeal
-
-	else IfInString, TextLine, %Character4% tells the group, 'cheal %Character1%'
-		gosub, Character1Heal
-	else IfInString, TextLine, %Character4% tells the group, 'cheal %Character3%'
-		gosub, Character3Heal
-	else IfInString, TextLine, %Character4% tells the group, 'cheal %Character2%'
-		gosub, Character2Heal
-	else IfInString, TextLine, %Character4% tells the group, 'cheal %DruidPet%'
-		gosub, DruidPetHeal
-}
-
-SowOtherFilter:
-{
-	IfInString, TextLine, You tell your party, 'csow %DruidPet%'
-	gosub, DruidPetSow	
-	else IfInString, TextLine, You tell your party, 'csow %Character4%'
-		gosub, Character4Sow		
-	else IfInString, TextLine, You tell your party, 'csow %Character3%'
-		gosub, Character3Sow	
-	else IfInString, TextLine, You tell your party, 'csow %Character2%'
-		gosub, Character2Sow
-	
-	else IfInString, TextLine, %Character2% tells the group, 'csow %Character1%'
-		gosub, Character1Sow
-	else IfInString, TextLine, %Character2% tells the group, 'csow %Character3%'
-		gosub, Character3Sow
-	else IfInString, TextLine, %Character2% tells the group, 'csow %Character4%'
-		gosub, Character4Sow
-	else IfInString, TextLine, %Character2% tells the group, 'csow %DruidPet%'
-		gosub, DruidPetSow
-	
-	else IfInString, TextLine, %Character3% tells the group, 'csow %Character1%'
-		gosub, Character1Sow
-	else IfInString, TextLine, %Character3% tells the group, 'csow %Character2%'
-		gosub, Character2Sow
-	else IfInString, TextLine, %Character3% tells the group, 'csow %Character4%'
-		gosub, Character4Sow
-	else IfInString, TextLine, %Character3% tells the group, 'csow %DruidPet%'
-		gosub, DruidPetSow
-	
-	else IfInString, TextLine, %Character4% tells the group, 'csow %Character1%'
-		gosub, Character1Sow
-	else IfInString, TextLine, %Character4% tells the group, 'csow %Character3%'
-		gosub, Character3Sow
-	else IfInString, TextLine, %Character4% tells the group, 'csow %Character2%'
-		gosub, Character2Sow
-	else IfInString, TextLine, %Character4% tells the group, 'csow %DruidPet%'
-		gosub, DruidPetSow	
-}
-
-SowMeFilter:
-{
-	IfInString, TextLine, You tell your party, 'sow me'
-	gosub, Character1Sow
-	
-	else IfInString, TextLine, %Character2% tells the group, 'sow me'
-		gosub, Character2Sow
-	
-	else IfInString, TextLine, %Character4% tells the group, 'sow me'
-		gosub, Character4Sow
-	
-	else IfInString, TextLine, %Character3% tells the group, 'sow me'
-		gosub, Character3Sow
-}
-
-SowMyTargetFilter:
-{
-	IfInString, TextLine, You tell your party, 'sow my target'
-	gosub, AssistCharacter1Sow
-	
-	
-	else IfInString, TextLine, %Character2% tells the group, 'sow my target'
-		gosub, AssistCharacter2Sow
-	
-	
-	else IfInString, TextLine, %Character3% tells the group, 'sow my target'
-		gosub, AssistCharacter3Sow
-	
-	
-	else IfInString, TextLine, %Character4% tells the group, 'sow my target'
-		gosub, AssistCharacter4Sow
-}
-
-DruidPetNukeMyTargetFilter:
-{
-	IfInString, TextLine, You tell your party, '%DruidPet% nuke my target'
-	gosub, DruidPetAssistCharacter1Nuke
-	
-	
-	else IfInString, TextLine, %Character2% tells the group, '%DruidPet% nuke my target'
-		gosub, DruidPetAssistCharacter2Nuke
-	
-	
-	else IfInString, TextLine, %Character3% tells the group, '%DruidPet% nuke my target'
-		gosub, DruidPetAssistCharacter3Nuke
-	
-	
-	else IfInString, TextLine, %Character4% tells the group, '%DruidPet% nuke my target'
-		gosub, DruidPetAssistCharacter4Nuke	
-}
-
-WizardPetNukeMyTargetFilter:
-{
-	IfInString, TextLine, You tell your party, '%WizardPet% nuke my target'
-	gosub, WizardPetAssistCharacter1Nuke
-	
-	
-	else IfInString, TextLine, %Character2% tells the group, '%WizardPet% nuke my target'
-		gosub, WizardPetAssistCharacter1Nuke
-	
-	
-	else IfInString, TextLine, %Character3% tells the group, '%WizardPet% nuke my target'
-		gosub, WizardPetAssistCharacter1Nuke
-	
-	
-	else IfInString, TextLine, %Character4% tells the group, '%WizardPet% nuke my target'
-		gosub, WizardPetAssistCharacter1Nuke	
-}
-
-DotMyTargetFilter:
-{
-	IfInString, TextLine, You tell your party, 'dot my target'
-	gosub, AssistCharacter1Dot
-	
-	
-	else IfInString, TextLine, %Character2% tells the group, 'dot my target'
-		gosub, AssistCharacter2Dot
-	
-	
-	else IfInString, TextLine, %Character3% tells the group, 'dot my target'
-		gosub, AssistCharacter3Dot
-	
-	
-	else IfInString, TextLine, %Character4% tells the group, 'dot my target'
-		gosub, AssistCharacter4Dot	
-}
-
-SnareMyTargetFilter:
-{
-	IfInString, TextLine, You tell your party, 'Snare my target'
-	gosub, AssistCharacter1Snare
-	
-	
-	else IfInString, TextLine, %Character2% tells the group, 'Snare my target'
-		gosub, AssistCharacter2Snare
-	
-	
-	else IfInString, TextLine, %Character3% tells the group, 'Snare my target'
-		gosub, AssistCharacter3Snare
-	
-	
-	else IfInString, TextLine, %Character4% tells the group, 'Snare my target'
-		gosub, AssistCharacter4Snare
-}
-
-SitDruidPetFilter:
-{
-	IfInString, TextLine, You tell your party, 'sit %DruidPet%'
-	gosub, SitDruidPet
-	
-	
-	else IfInString, TextLine, %Character2% tells the group, 'sit %DruidPet%'
-		gosub, SitDruidPet
-	
-	
-	else IfInString, TextLine, %Character3% tells the group, 'sit %DruidPet%'
-		gosub, SitDruidPet
-	
-	
-	else IfInString, TextLine, %Character4% tells the group, 'sit %DruidPet%'
-		gosub, SitDruidPet
-}
-
-FollowMeDruidPetFilter:
-{
-	IfInString, TextLine, You tell your party, 'follow me %DruidPet%'
-	gosub, DruidPetFollowCharacter1
-	
-	
-	else IfInString, TextLine, %Character2% tells the group, 'follow me %DruidPet%'
-		gosub, DruidPetFollowCharacter2
-	
-	
-	else IfInString, TextLine, %Character3% tells the group, 'follow me %DruidPet%'
-		gosub, DruidPetFollowCharacter3
-	
-	
-	else IfInString, TextLine, %Character4% tells the group, 'follow me %DruidPet%'
-		gosub, DruidPetFollowCharacter4
-}
-
-StayHereDruidPetFilter:
-{
-	IfInString, TextLine, You tell your party, 'stay here %DruidPet%'
-	gosub, StayHereDruidPet
-	
-	
-	else IfInString, TextLine, %Character2% tells the group, 'stay here %DruidPet%'
-		gosub, StayHereDruidPet
-	
-	
-	else IfInString, TextLine, %Character3% tells the group, 'stay here %DruidPet%'
-		gosub, StayHereDruidPet
-	
-	
-	else IfInString, TextLine, %Character4% tells the group, 'stay here %DruidPet%'
-		gosub, StayHereDruidPet
-}
-
-SitWizardPetFilter:
-{
-	IfInString, TextLine, You tell your party, 'sit %WizardPet%'
-	gosub, SitWizardPet
-}
-
-FollowMeWizardPetFilter:
-{
-	IfInString, TextLine, You tell your party, 'follow me %WizardPet%'
-	gosub, WizardPetFollowCharacter1
-}
-
-StayHereWizardPetFilter:
-{
-	IfInString, TextLine, You tell your party, 'stay here %WizardPet%'
-	gosub, StayHereWizardPet
-}
-return
+!^R::Reload
